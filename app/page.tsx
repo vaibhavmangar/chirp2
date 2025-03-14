@@ -6,6 +6,59 @@ import Image from 'next/image';
 
 const ACQUISITION_SAMPLES = [512, 1024, 2048];
 
+interface ChirpFrequency {
+  start: number;
+  end: number;
+  bandwidth: number;
+}
+
+interface Timing {
+  dc_power_delay: number;
+  dwell: number;
+  settle: number;
+  acquisition: number;
+  reset: number;
+  jumpback: number;
+  idle: number;
+  chirp: number;
+}
+
+interface Frame {
+  time: number;
+  chirps: number;
+}
+
+interface Antennas {
+  tx: number;
+  rx: number;
+}
+
+interface Parameters {
+  range_max: number;
+  range_res: number;
+  velocity_max: number;
+  velocity_res: number;
+  angular_res: number;
+}
+
+interface IFBandwidthRow {
+  chirp_bw: number;
+  if_bandwidth: number;
+}
+
+interface RadarResult {
+  samples: number;
+  requestedParams: Parameters;
+  obtainedParams: Parameters;
+  chirpFrequency: ChirpFrequency;
+  timing: Timing;
+  frame: Frame;
+  antennas: Antennas;
+  timeOfFlight: number;
+  memoryRequired: number;
+  ifBandwidthTable: IFBandwidthRow[];
+}
+
 export default function Home() {
   const [formData, setFormData] = useState({
     range_res: '',
@@ -16,7 +69,7 @@ export default function Home() {
     frequency: ''
   });
 
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<RadarResult[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const [showForm, setShowForm] = useState(true);
 
@@ -197,7 +250,7 @@ export default function Home() {
                     className="fill-current text-black"
                     style={{ fontSize: "100%", fill: 'black' }}
                   >
-                    {results[activeTab]?.chirpFrequency.end.toFixed(3)*1000}
+                    {Number((results[activeTab]?.chirpFrequency.end || 0).toFixed(3)) * 1000}
                   </text>
                   <text
                     x="1.5%"
@@ -205,7 +258,7 @@ export default function Home() {
                     className="fill-current text-black"
                     style={{ fontSize: '100%', fill: 'black' }}
                   >
-                    {((results[activeTab]?.chirpFrequency.end - results[activeTab]?.chirpFrequency.start) / 2 + results[activeTab]?.chirpFrequency.start).toFixed(3)*1000}
+                    {Number((((results[activeTab]?.chirpFrequency.end || 0) - (results[activeTab]?.chirpFrequency.start || 0)) / 2 + (results[activeTab]?.chirpFrequency.start || 0)).toFixed(3)) * 1000}
                   </text>
                   <text
                     x="1.5%"
@@ -213,7 +266,7 @@ export default function Home() {
                     className="fill-current text-black"
                     style={{ fontSize: '100%', fill: 'black' }}
                   >
-                    {results[activeTab]?.chirpFrequency.start.toFixed(3)*1000}
+                    {Number((results[activeTab]?.chirpFrequency.start || 0).toFixed(3)) * 1000}
                   </text>
                   <text
                     x="6.5%"
@@ -524,7 +577,7 @@ export default function Home() {
                           </tr>
                         </thead>
                         <tbody>
-                          {results[activeTab].ifBandwidthTable.map((row: any, index: number) => (
+                          {results[activeTab].ifBandwidthTable.map((row: IFBandwidthRow, index: number) => (
                             <tr key={index} className="border-t border-gray-700">
                               <td className="py-2">{row.chirp_bw}</td>
                               <td className="py-2">{row.if_bandwidth.toFixed(2)}</td>
